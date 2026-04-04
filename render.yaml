@@ -1,0 +1,13 @@
+# Render Blueprint — Web service for the Express API in /backend
+# https://render.com/docs/blueprint-spec
+#
+# After first deploy, set env vars in the Render dashboard (see backend/.env.example).
+
+services:
+  - type: web
+    name: clientflow-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
