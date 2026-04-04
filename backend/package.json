@@ -1,0 +1,31 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "ClientFlow API — Twilio WhatsApp webhook + MongoDB CRM",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test:webhook": "node scripts/send-test-webhook.mjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^16.4.7",
+    "express": "^5.2.1",
+    "ffmpeg-static": "^5.2.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.9.3",
+    "multer": "^1.4.5-lts.1",
+    "socket.io": "^4.8.1",
+    "twilio": "^5.4.0"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10"
+  }
+}
