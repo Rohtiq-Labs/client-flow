@@ -179,7 +179,7 @@ export const ChatInput = ({
       className="border-t border-zinc-200/80 bg-white px-4 py-3 dark:border-white/10 dark:bg-zinc-950"
     >
       <div className="flex items-end gap-2 rounded-2xl border border-zinc-200/90 bg-zinc-50/80 p-1.5 shadow-inner dark:border-white/10 dark:bg-zinc-900/40">
-        {imageEnabled ? (
+        {imageEnabled && imageUi ? (
           <>
             <input
               ref={imageInputRef}
@@ -218,7 +218,7 @@ export const ChatInput = ({
             </button>
           </>
         ) : null}
-        {voiceEnabled ? (
+        {voiceEnabled && voiceUi ? (
           <>
             <input
               ref={fileInputRef}
@@ -312,7 +312,7 @@ export const ChatInput = ({
           placeholder={placeholder}
           className="max-h-32 min-h-[44px] flex-1 resize-none rounded-xl bg-transparent px-3 py-2.5 text-sm text-zinc-900 outline-none placeholder:text-zinc-500 disabled:opacity-50 dark:text-zinc-50 dark:placeholder:text-zinc-500"
         />
-        {voiceEnabled && isRecording ? (
+        {voiceEnabled && voiceUi && isRecording ? (
           <span
             className="self-center whitespace-nowrap text-xs font-medium text-red-600 dark:text-red-400"
             role="status"

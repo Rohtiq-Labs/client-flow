@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCrmAuth } from "@/context/crm-auth-context";
 import { useOrgBranding } from "@/context/org-branding-context";
@@ -13,7 +13,7 @@ import { loginCrm } from "@/lib/crm-client";
 const uiLocale: LoginLocale =
   process.env.NEXT_PUBLIC_UI_LOCALE === "ur" ? "ur" : "en";
 
-export default function LoginPage(): React.JSX.Element {
+function LoginPageContent(): React.JSX.Element {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, ready, isAuthenticated } = useCrmAuth();
@@ -216,5 +216,24 @@ export default function LoginPage(): React.JSX.Element {
         </section>
       </main>
     </div>
+  );
+}
+
+export default function LoginPage(): React.JSX.Element {
+  const copy = useMemo(() => getLoginPageDict(uiLocale), []);
+  return (
+    <Suspense
+      fallback={
+        <div
+          className="grid min-h-[100svh] place-items-center bg-zinc-50 text-zinc-500 dark:bg-zinc-950 dark:text-zinc-400"
+          role="status"
+          aria-live="polite"
+        >
+          <span className="text-sm">{copy.suspenseLoading}</span>
+        </div>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }

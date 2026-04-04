@@ -23,6 +23,7 @@ export type LoginPageCopy = {
   errorGeneric: string;
   footerHint: string;
   linkToSignup: string;
+  suspenseLoading: string;
 };
 
 const en: LoginPageCopy = {
@@ -49,6 +50,7 @@ const en: LoginPageCopy = {
   errorGeneric: "Sign-in failed. Check your credentials and try again.",
   footerHint: "First user to sign up becomes admin; additional users are agents.",
   linkToSignup: "No account yet? Create one",
+  suspenseLoading: "Loading…",
 };
 
 const ur: LoginPageCopy = {
@@ -75,6 +77,7 @@ const ur: LoginPageCopy = {
   errorGeneric: "سائن ان ناکام۔ تفصیلات چیک کریں۔",
   footerHint: "پہلا سائن اپ ایڈمن بنتا ہے؛ باقی صارف ایجنٹ۔",
   linkToSignup: "اکاؤنٹ نہیں؟ بنائیں",
+  suspenseLoading: "لوڈ ہو رہا ہے…",
 };
 
 const byLocale: Record<LoginLocale, LoginPageCopy> = { en, ur };
