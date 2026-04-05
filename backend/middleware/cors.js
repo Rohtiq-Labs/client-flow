@@ -1,23 +1,48 @@
-/**
- * Browser direct API calls (SPA / Next client) send Authorization and X-Org-Slug.
- */
-export const corsMiddleware = (req, res, next) => {
-  const origin =
+import cors from 'cors';
+
+const parseAllowedOrigins = () => {
+  const raw =
     process.env.CORS_ORIGIN ||
     process.env.FRONTEND_ORIGIN ||
-    'http://localhost:3000';
-
-  res.setHeader('Access-Control-Allow-Origin', origin);
-  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,POST,PATCH,OPTIONS');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'Content-Type, Authorization, X-Org-Slug'
-  );
-
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(204);
-    return;
+    'http://localhost:3000,http://127.0.0.1:3000';
+  const parts = raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const extras = [];
+  for (const o of parts) {
+    if (o.includes('localhost:')) {
+      extras.push(o.replace(/localhost/g, '127.0.0.1'));
+    }
+    if (o.includes('127.0.0.1:')) {
+      extras.push(o.replace(/127\.0\.0\.1/g, 'localhost'));
+    }
   }
-
-  next();
+  return [...new Set([...parts, ...extras])];
 };
+
+const corsOptions = {
+  origin: (requestOrigin, callback) => {
+    const allowed = parseAllowedOrigins();
+    if (!requestOrigin) {
+      callback(null, false);
+      return;
+    }
+    if (allowed.includes(String(requestOrigin))) {
+      callback(null, true);
+      return;
+    }
+    callback(null, false);
+  },
+  methods: ['GET', 'HEAD', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Org-Slug',
+    'Accept',
+  ],
+  maxAge: 86400,
+  optionsSuccessStatus: 204,
+};
+
+export const corsMiddleware = cors(corsOptions);
