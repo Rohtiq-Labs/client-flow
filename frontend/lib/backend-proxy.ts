@@ -1,4 +1,9 @@
+import dns from "node:dns";
 import { NextRequest, NextResponse } from "next/server";
+
+import { isPaaSPreviewHost, tenantSlugFromHost } from "@/lib/tenant-slug-from-host";
+
+dns.setDefaultResultOrder("ipv4first");
 
 const DEFAULT_BACKEND = "http://127.0.0.1:3001";
 
@@ -13,22 +18,6 @@ const isLocalFallbackBase = (base: string): boolean =>
 
 const ORG_COOKIE_NAME = "cf_org";
 
-const tenantSlugFromHost = (host: string | null): string => {
-  const h = String(host || "").trim().toLowerCase();
-  if (!h) return "default";
-  const noPort = h.split(":")[0] ?? h;
-  if (noPort === "localhost" || noPort === "127.0.0.1") {
-    return "default";
-  }
-  const parts = noPort.split(".").filter(Boolean);
-  if (parts.length < 3) {
-    // e.g. yourcrm.com (no subdomain) → default
-    return "default";
-  }
-  const slug = parts[0] ?? "default";
-  return slug || "default";
-};
-
 /**
  * Proxies to Express: `${CRM_BACKEND_URL}/api/${apiPath}`.
  */
@@ -41,10 +30,13 @@ export const proxyToBackend = async (
   const target = `${base}/api/${apiPath}${request.nextUrl.search}`;
 
   const headers = new Headers();
+  const host = request.headers.get("host");
   const cookieSlug = String(request.cookies.get(ORG_COOKIE_NAME)?.value || "")
     .trim()
     .toLowerCase();
-  const orgSlug = cookieSlug || tenantSlugFromHost(request.headers.get("host"));
+  const fromHost = tenantSlugFromHost(host);
+  const orgSlug =
+    isPaaSPreviewHost(host) ? fromHost : cookieSlug || fromHost;
   headers.set("X-Org-Slug", orgSlug);
   const incomingAuth = request.headers.get("authorization");
   if (incomingAuth) {
