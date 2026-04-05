@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export const backendBase = (): string =>
-  (process.env.CRM_BACKEND_URL || "http://127.0.0.1:3001").replace(/\/$/, "");
+const DEFAULT_BACKEND = "http://127.0.0.1:3001";
+
+export const backendBase = (): string => {
+  const raw = process.env.CRM_BACKEND_URL?.trim();
+  const base = (raw && raw.length > 0 ? raw : DEFAULT_BACKEND).replace(/\/$/, "");
+  return base;
+};
+
+const isLocalFallbackBase = (base: string): boolean =>
+  base.startsWith("http://127.0.0.1") || base.startsWith("http://localhost");
 
 const ORG_COOKIE_NAME = "cf_org";
 
@@ -29,7 +37,8 @@ export const proxyToBackend = async (
   apiPath: string,
   method: string,
 ): Promise<NextResponse> => {
-  const target = `${backendBase()}/api/${apiPath}${request.nextUrl.search}`;
+  const base = backendBase();
+  const target = `${base}/api/${apiPath}${request.nextUrl.search}`;
 
   const headers = new Headers();
   const cookieSlug = String(request.cookies.get(ORG_COOKIE_NAME)?.value || "")
@@ -41,7 +50,7 @@ export const proxyToBackend = async (
   if (incomingAuth) {
     headers.set("Authorization", incomingAuth);
   } else {
-    const key = process.env.CRM_API_KEY;
+    const key = process.env.CRM_API_KEY?.trim();
     if (key) {
       headers.set("Authorization", `Bearer ${key}`);
     }
@@ -86,9 +95,14 @@ export const proxyToBackend = async (
     }
     return out;
   } catch (e) {
-    console.error("[backend-proxy]", apiPath, e);
+    console.error("[backend-proxy]", apiPath, { base, target, err: e });
+    const onVercel = Boolean(process.env.VERCEL);
+    const hint =
+      onVercel && isLocalFallbackBase(base)
+        ? "CRM_BACKEND_URL is missing for this deployment environment. In Vercel: set it for Production and Preview, then redeploy."
+        : undefined;
     return NextResponse.json(
-      { success: false, error: "Backend unreachable" },
+      { success: false, error: "Backend unreachable", ...(hint ? { hint } : {}) },
       { status: 502 },
     );
   }
