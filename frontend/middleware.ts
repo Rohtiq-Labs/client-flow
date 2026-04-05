@@ -1,13 +1,22 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-import { tenantSlugFromHost } from "@/lib/tenant-slug-from-host";
-
 const AUTH_COOKIE_NAME = "cf_auth";
 const ORG_COOKIE_NAME = "cf_org";
 
 const isAuthed = (req: NextRequest): boolean => {
   return Boolean(req.cookies.get(AUTH_COOKIE_NAME)?.value);
+};
+
+const tenantSlugFromHost = (host: string): string => {
+  const h = String(host || "").trim().toLowerCase();
+  const noPort = h.split(":")[0] ?? h;
+  if (!noPort || noPort === "localhost" || noPort === "127.0.0.1") {
+    return "default";
+  }
+  const parts = noPort.split(".").filter(Boolean);
+  if (parts.length < 3) return "default";
+  return parts[0] || "default";
 };
 
 export function middleware(req: NextRequest) {

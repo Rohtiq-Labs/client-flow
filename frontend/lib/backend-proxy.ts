@@ -1,22 +1,25 @@
-import dns from "node:dns";
 import { NextRequest, NextResponse } from "next/server";
 
-import { isPaaSPreviewHost, tenantSlugFromHost } from "@/lib/tenant-slug-from-host";
-
-dns.setDefaultResultOrder("ipv4first");
-
-const DEFAULT_BACKEND = "http://127.0.0.1:3001";
-
-export const backendBase = (): string => {
-  const raw = process.env.CRM_BACKEND_URL?.trim();
-  const base = (raw && raw.length > 0 ? raw : DEFAULT_BACKEND).replace(/\/$/, "");
-  return base;
-};
-
-const isLocalFallbackBase = (base: string): boolean =>
-  base.startsWith("http://127.0.0.1") || base.startsWith("http://localhost");
+export const backendBase = (): string =>
+  (process.env.CRM_BACKEND_URL || "http://127.0.0.1:3001").replace(/\/$/, "");
 
 const ORG_COOKIE_NAME = "cf_org";
+
+const tenantSlugFromHost = (host: string | null): string => {
+  const h = String(host || "").trim().toLowerCase();
+  if (!h) return "default";
+  const noPort = h.split(":")[0] ?? h;
+  if (noPort === "localhost" || noPort === "127.0.0.1") {
+    return "default";
+  }
+  const parts = noPort.split(".").filter(Boolean);
+  if (parts.length < 3) {
+    // e.g. yourcrm.com (no subdomain) → default
+    return "default";
+  }
+  const slug = parts[0] ?? "default";
+  return slug || "default";
+};
 
 /**
  * Proxies to Express: `${CRM_BACKEND_URL}/api/${apiPath}`.
@@ -26,23 +29,19 @@ export const proxyToBackend = async (
   apiPath: string,
   method: string,
 ): Promise<NextResponse> => {
-  const base = backendBase();
-  const target = `${base}/api/${apiPath}${request.nextUrl.search}`;
+  const target = `${backendBase()}/api/${apiPath}${request.nextUrl.search}`;
 
   const headers = new Headers();
-  const host = request.headers.get("host");
   const cookieSlug = String(request.cookies.get(ORG_COOKIE_NAME)?.value || "")
     .trim()
     .toLowerCase();
-  const fromHost = tenantSlugFromHost(host);
-  const orgSlug =
-    isPaaSPreviewHost(host) ? fromHost : cookieSlug || fromHost;
+  const orgSlug = cookieSlug || tenantSlugFromHost(request.headers.get("host"));
   headers.set("X-Org-Slug", orgSlug);
   const incomingAuth = request.headers.get("authorization");
   if (incomingAuth) {
     headers.set("Authorization", incomingAuth);
   } else {
-    const key = process.env.CRM_API_KEY?.trim();
+    const key = process.env.CRM_API_KEY;
     if (key) {
       headers.set("Authorization", `Bearer ${key}`);
     }
@@ -87,14 +86,9 @@ export const proxyToBackend = async (
     }
     return out;
   } catch (e) {
-    console.error("[backend-proxy]", apiPath, { base, target, err: e });
-    const onVercel = Boolean(process.env.VERCEL);
-    const hint =
-      onVercel && isLocalFallbackBase(base)
-        ? "CRM_BACKEND_URL is missing for this deployment environment. In Vercel: set it for Production and Preview, then redeploy."
-        : undefined;
+    console.error("[backend-proxy]", apiPath, e);
     return NextResponse.json(
-      { success: false, error: "Backend unreachable", ...(hint ? { hint } : {}) },
+      { success: false, error: "Backend unreachable" },
       { status: 502 },
     );
   }
