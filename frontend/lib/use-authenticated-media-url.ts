@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { crmAuthHeaders } from "@/lib/crm-auth-token";
+import { crmRequestHeaders } from "@/lib/crm-auth-token";
 
 type State = {
   url: string | null;
@@ -37,9 +37,9 @@ export const useAuthenticatedMediaUrl = (
       try {
         const res = await fetch(src, {
           signal: ac.signal,
-          credentials: "same-origin",
+          credentials: "omit",
           headers: {
-            ...crmAuthHeaders(),
+            ...crmRequestHeaders(),
           },
         });
         if (!res.ok) {

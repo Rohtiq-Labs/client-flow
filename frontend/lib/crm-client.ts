@@ -1,4 +1,9 @@
-import { crmAuthHeaders, setCrmAuthToken } from "@/lib/crm-auth-token";
+import { crmApiPath } from "@/lib/crm-api-base";
+import {
+  crmRequestHeaders,
+  setCrmAuthToken,
+} from "@/lib/crm-auth-token";
+import { getCrmOrgSlug } from "@/lib/crm-org-slug";
 
 export type CrmApiAssignedTo = {
   id: string;
@@ -48,9 +53,6 @@ export type CrmAuthUser = {
   role: string;
 };
 
-const apiPath = (segments: string[]): string =>
-  `/api/backend/${segments.map(encodeURIComponent).join("/")}`;
-
 const parseJson = (text: string): unknown => {
   if (!text) return null;
   try {
@@ -64,11 +66,11 @@ const crmFetch = async (
   segments: string[],
   init?: RequestInit,
 ): Promise<unknown> => {
-  const res = await fetch(apiPath(segments), {
+  const res = await fetch(crmApiPath(segments), {
     ...init,
     headers: {
       "Content-Type": "application/json",
-      ...crmAuthHeaders(),
+      ...crmRequestHeaders(),
       ...init?.headers,
     },
     cache: "no-store",
@@ -88,10 +90,10 @@ export const fetchCrmLeads = async (
     query && Object.keys(query).length > 0
       ? `?${new URLSearchParams(query).toString()}`
       : "";
-  const res = await fetch(`${apiPath(["leads"])}${qs}`, {
+  const res = await fetch(`${crmApiPath(["leads"])}${qs}`, {
     method: "GET",
     headers: {
-      ...crmAuthHeaders(),
+      ...crmRequestHeaders(),
     },
     cache: "no-store",
   });
@@ -219,9 +221,9 @@ export type CrmOrganizationInfo = {
 };
 
 export const fetchCrmOrganizationInfo = async (): Promise<CrmOrganizationInfo> => {
-  const res = await fetch(apiPath(["org"]), {
+  const res = await fetch(crmApiPath(["org"]), {
     headers: {
-      ...crmAuthHeaders(),
+      ...crmRequestHeaders(),
     },
     cache: "no-store",
   });
@@ -286,9 +288,12 @@ export const loginCrm = async (input: {
   user: CrmAuthUser;
   organization?: CrmLoginOrganization;
 }> => {
-  const res = await fetch(apiPath(["auth", "login"]), {
+  const res = await fetch(crmApiPath(["auth", "login"]), {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "X-Org-Slug": getCrmOrgSlug(),
+    },
     body: JSON.stringify(input),
     cache: "no-store",
   });
@@ -396,11 +401,11 @@ export const sendCrmVoiceMessage = async (input: {
   }
   form.append("audio", input.blob, input.filename ?? "voice.webm");
 
-  const res = await fetch(apiPath(["messages", "send-voice"]), {
+  const res = await fetch(crmApiPath(["messages", "send-voice"]), {
     method: "POST",
     body: form,
     headers: {
-      ...crmAuthHeaders(),
+      ...crmRequestHeaders(),
     },
     cache: "no-store",
   });
@@ -436,11 +441,11 @@ export const sendCrmImageMessage = async (input: {
   }
   form.append("image", input.blob, input.filename ?? "photo.jpg");
 
-  const res = await fetch(apiPath(["messages", "send-image"]), {
+  const res = await fetch(crmApiPath(["messages", "send-image"]), {
     method: "POST",
     body: form,
     headers: {
-      ...crmAuthHeaders(),
+      ...crmRequestHeaders(),
     },
     cache: "no-store",
   });
@@ -497,10 +502,10 @@ export const fetchCrmNotifications = async (query?: {
   }
   const qs = params.toString();
   const res = await fetch(
-    `${apiPath(["notifications"])}${qs ? `?${qs}` : ""}`,
+    `${crmApiPath(["notifications"])}${qs ? `?${qs}` : ""}`,
     {
       method: "GET",
-      headers: { ...crmAuthHeaders() },
+      headers: { ...crmRequestHeaders() },
       cache: "no-store",
     },
   );

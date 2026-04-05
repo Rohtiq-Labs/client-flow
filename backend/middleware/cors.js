@@ -1,5 +1,5 @@
 /**
- * Browser calls should go through the Next.js proxy; this helps direct tools / future SPA.
+ * Browser direct API calls (SPA / Next client) send Authorization and X-Org-Slug.
  */
 export const corsMiddleware = (req, res, next) => {
   const origin =
@@ -8,10 +8,10 @@ export const corsMiddleware = (req, res, next) => {
     'http://localhost:3000';
 
   res.setHeader('Access-Control-Allow-Origin', origin);
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,POST,PATCH,OPTIONS');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Content-Type, Authorization'
+    'Content-Type, Authorization, X-Org-Slug'
   );
 
   if (req.method === 'OPTIONS') {

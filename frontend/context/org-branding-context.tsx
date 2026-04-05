@@ -8,6 +8,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { crmApiPath } from "@/lib/crm-api-base";
+import { crmRequestHeaders } from "@/lib/crm-auth-token";
 
 export type OrgBranding = {
   id: string;
@@ -54,7 +56,10 @@ export const OrgBrandingProvider = ({
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/org", { cache: "no-store" });
+        const res = await fetch(crmApiPath(["org"]), {
+          cache: "no-store",
+          headers: { ...crmRequestHeaders() },
+        });
         const data = (await res.json()) as
           | { success?: boolean; organization?: OrgBranding }
           | null;

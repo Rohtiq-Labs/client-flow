@@ -29,6 +29,7 @@ import {
 } from "@/lib/crm-client";
 import { formatInboxRelativeTime } from "@/lib/format-inbox-time";
 import { crmSocketAuthPayload } from "@/lib/crm-socket-auth";
+import { crmBackendBase } from "@/lib/crm-api-base";
 import { leadStatusApiToUi, leadStatusUiToApi } from "@/lib/lead-pipeline";
 
 const inboxLocale: InboxLocale =
@@ -57,11 +58,15 @@ const ingestLeads = (raw: CrmApiLead[], locale: InboxLocale): InboxLead[] =>
       : null,
   }));
 
-const apiMediaToProxySrc = (
+const apiMediaToBackendSrc = (
   url: string | null | undefined,
 ): string | null => {
   if (!url) return null;
-  return `/api/backend${url.replace(/^\/api/, "")}`;
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+  const path = url.startsWith("/") ? url : `/${url}`;
+  return `${crmBackendBase()}${path}`;
 };
 
 const apiDeliveryStatus = (m: CrmApiMessage): MessageDeliveryStatus | null => {
@@ -84,9 +89,9 @@ const ingestMessages = (
     timestampLabel: formatInboxRelativeTime(m.createdAt, locale),
     messageType: m.messageType,
     hasAudio: Boolean(m.hasAudio),
-    audioSrc: apiMediaToProxySrc(m.audioUrl),
+    audioSrc: apiMediaToBackendSrc(m.audioUrl),
     hasImage: Boolean(m.hasImage),
-    imageSrc: apiMediaToProxySrc(m.imageUrl),
+    imageSrc: apiMediaToBackendSrc(m.imageUrl),
     deliveryStatus: apiDeliveryStatus(m),
   }));
 

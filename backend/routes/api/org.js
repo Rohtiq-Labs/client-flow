@@ -12,7 +12,7 @@ const router = express.Router();
 
 /**
  * Public tenant config (used for white-label branding).
- * Resolves org by header `x-org-slug` (set by Next.js proxy).
+ * Resolves org by header `x-org-slug` (browser or Next middleware sets cookie / tenant host).
  */
 router.get('/', async (req, res) => {
   try {
