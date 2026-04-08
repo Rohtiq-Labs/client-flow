@@ -21,6 +21,38 @@ const parseAllowedOrigins = () => {
   return [...new Set([...parts, ...extras])];
 };
 
+const originMatches = (allowedOrigin, requestOrigin) => {
+  if (!allowedOrigin || !requestOrigin) return false;
+  const a = String(allowedOrigin).trim();
+  const r = String(requestOrigin).trim();
+  if (!a || !r) return false;
+  if (a === r) return true;
+
+  // Support wildcard entries like: https://*.vercel.app
+  // (scheme must still match; only the hostname prefix is wildcarded)
+  try {
+    const allowedUrl = new URL(a);
+    const requestUrl = new URL(r);
+    if (allowedUrl.protocol !== requestUrl.protocol) return false;
+    if (allowedUrl.port !== requestUrl.port) return false;
+
+    const allowedHost = allowedUrl.hostname;
+    const requestHost = requestUrl.hostname;
+
+    if (allowedHost.startsWith('*.')) {
+      const suffix = allowedHost.slice(2);
+      return (
+        requestHost === suffix ||
+        requestHost.endsWith(`.${suffix}`)
+      );
+    }
+  } catch {
+    // If parsing fails, fall back to strict match only.
+  }
+
+  return false;
+};
+
 const corsOptions = {
   origin: (requestOrigin, callback) => {
     const allowed = parseAllowedOrigins();
@@ -28,7 +60,7 @@ const corsOptions = {
       callback(null, false);
       return;
     }
-    if (allowed.includes(String(requestOrigin))) {
+    if (allowed.some((a) => originMatches(a, requestOrigin))) {
       callback(null, true);
       return;
     }
