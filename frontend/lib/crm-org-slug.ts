@@ -9,6 +9,10 @@ const tenantSlugFromHost = (host: string): string => {
   if (noPort === "localhost" || noPort === "127.0.0.1") {
     return "default";
   }
+  // On platform domains (e.g. Vercel), the subdomain is not a tenant slug.
+  if (noPort.endsWith(".vercel.app")) {
+    return "default";
+  }
   const parts = noPort.split(".").filter(Boolean);
   if (parts.length < 3) {
     return "default";
