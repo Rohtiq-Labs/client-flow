@@ -11,19 +11,27 @@ import {
 const router = express.Router();
 
 /**
- * Public tenant config (used for white-label branding).
- * Resolves org by header `x-org-slug` (browser or Next middleware sets cookie / tenant host).
+ * Organization branding/config.
+ * Single-domain multi-tenant: when logged in, org is derived from JWT (req.organizationId).
  */
 router.get('/', async (req, res) => {
   try {
-    const slug = String(req.headers['x-org-slug'] || '')
-      .trim()
-      .toLowerCase();
-    if (!slug) {
-      return res.status(400).json({ success: false, error: 'Organization is required (x-org-slug)' });
+    const authHeader = String(req.headers.authorization || '').trim();
+    if (!authHeader.startsWith('Bearer ')) {
+      return res.json({ success: true, organization: null });
     }
 
-    const org = await Organization.findOne({ slug })
+    // Use the same auth as protected routes to resolve req.organizationId.
+    await new Promise((resolve, reject) =>
+      protectApi(req, res, (err) => (err ? reject(err) : resolve(null))),
+    );
+
+    const organizationId = req.organizationId;
+    if (!organizationId) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const org = await Organization.findById(organizationId)
       .select('name slug logo primaryColor')
       .lean();
 

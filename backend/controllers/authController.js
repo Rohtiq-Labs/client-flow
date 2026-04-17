@@ -162,18 +162,6 @@ export const login = async (req, res) => {
       });
     }
 
-    const orgSlug = orgSlugFromRequest(req);
-    if (!orgSlug) {
-      return res.status(400).json({
-        success: false,
-        error: 'Organization is required (x-org-slug)',
-      });
-    }
-    const org = await Organization.findOne({ slug: orgSlug }).select('_id').lean();
-    if (!org) {
-      return res.status(404).json({ success: false, error: 'Organization not found' });
-    }
-
     const { email, password } = req.body ?? {};
 
     if (!email || typeof email !== 'string' || !emailOk(email)) {
@@ -185,25 +173,15 @@ export const login = async (req, res) => {
 
     const normalizedEmail = String(email).toLowerCase().trim();
 
-    let user = await User.findOne({
-      organizationId: org._id,
-      email: normalizedEmail,
-    }).select('+password');
-
-    // Localhost / missing cookie: X-Org-Slug may be "default" while the user belongs to another org.
-    // If email is unique in the DB, resolve that user; if ambiguous, require the correct workspace slug.
-    if (!user) {
-      const candidates = await User.find({ email: normalizedEmail }).select('+password');
-      if (candidates.length === 1) {
-        user = candidates[0];
-      } else if (candidates.length > 1) {
-        return res.status(400).json({
-          success: false,
-          error:
-            'This email is used in more than one workspace. Open your company URL or add the organization slug (x-org-slug).',
-        });
-      }
+    const candidates = await User.find({ email: normalizedEmail }).select('+password');
+    if (candidates.length > 1) {
+      return res.status(400).json({
+        success: false,
+        error:
+          'This email is used in more than one organization. Ask an admin to rename one account email.',
+      });
     }
+    const user = candidates[0] ?? null;
 
     if (!user) {
       return res.status(401).json({ success: false, error: 'Invalid email or password' });

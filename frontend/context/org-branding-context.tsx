@@ -61,7 +61,7 @@ export const OrgBrandingProvider = ({
           headers: { ...crmRequestHeaders() },
         });
         const data = (await res.json()) as
-          | { success?: boolean; organization?: OrgBranding }
+          | { success?: boolean; organization?: OrgBranding | null }
           | null;
         if (!cancelled && data?.success && data.organization) {
           setOrganization(data.organization);

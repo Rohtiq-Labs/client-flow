@@ -3,7 +3,6 @@ import {
   crmRequestHeaders,
   setCrmAuthToken,
 } from "@/lib/crm-auth-token";
-import { getCrmOrgSlug } from "@/lib/crm-org-slug";
 
 export type CrmApiAssignedTo = {
   id: string;
@@ -292,7 +291,6 @@ export const loginCrm = async (input: {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-Org-Slug": getCrmOrgSlug(),
     },
     body: JSON.stringify(input),
     cache: "no-store",

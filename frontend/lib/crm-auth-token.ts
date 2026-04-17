@@ -1,5 +1,3 @@
-import { getCrmOrgSlug } from "@/lib/crm-org-slug";
-
 const STORAGE_KEY = "crm_jwt";
 
 export const getCrmAuthToken = (): string | null => {
@@ -38,5 +36,4 @@ export const crmAuthHeaders = (): Record<string, string> => {
 
 export const crmRequestHeaders = (): Record<string, string> => ({
   ...crmAuthHeaders(),
-  "X-Org-Slug": getCrmOrgSlug(),
 });
