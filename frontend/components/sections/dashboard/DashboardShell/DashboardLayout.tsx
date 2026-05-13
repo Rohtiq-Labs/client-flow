@@ -47,12 +47,12 @@ export const DashboardLayout = ({
       >
         Skip to content
       </a>
-      <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-4 py-4 lg:grid-cols-[280px_1fr] lg:gap-6 lg:py-6">
+      <div className="mx-auto w-full max-w-[1400px] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-3 py-3 sm:gap-4 sm:py-4 lg:grid-cols-[280px_1fr] lg:gap-6 lg:py-6">
           <DashboardSidebar />
           <div className="min-w-0">
             <DashboardTopbar />
-            <main id="main" className="mt-4 min-w-0">
+            <main id="main" className="mt-3 min-w-0 sm:mt-4">
               {children}
             </main>
           </div>

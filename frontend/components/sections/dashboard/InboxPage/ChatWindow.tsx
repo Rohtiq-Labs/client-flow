@@ -22,6 +22,8 @@ type ChatWindowProps = {
   sending: boolean;
   sendError: string | null;
   statusUpdating: boolean;
+  navigationMenuSlot?: React.ReactNode;
+  onBackToConversationList?: () => void;
 };
 
 const leadTitle = (lead: InboxLead): string =>
@@ -42,6 +44,8 @@ export const ChatWindow = ({
   sending,
   sendError,
   statusUpdating,
+  navigationMenuSlot,
+  onBackToConversationList,
 }: ChatWindowProps): React.JSX.Element => {
   const scrollAnchorRef = useRef<HTMLDivElement>(null);
   const threadRef = useRef<HTMLDivElement>(null);
@@ -75,27 +79,53 @@ export const ChatWindow = ({
       className="flex min-h-0 min-w-0 flex-1 flex-col bg-zinc-50/40 dark:bg-zinc-950"
       aria-label={`Chat with ${leadTitle(lead)}`}
     >
-      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-zinc-200/80 bg-white px-5 py-3.5 dark:border-white/10 dark:bg-zinc-950">
-        <div className="min-w-0 flex-1">
-          <h2 className="truncate text-base font-semibold text-zinc-950 dark:text-zinc-50">
-            {leadTitle(lead)}
-          </h2>
-          {lead.name ? (
-            <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
-              {lead.phone}
-            </p>
+      <header className="flex shrink-0 flex-wrap items-start gap-2 border-b border-zinc-200/80 bg-white px-3 py-3 sm:gap-3 sm:px-5 sm:py-3.5 dark:border-white/10 dark:bg-zinc-950">
+        <div className="flex min-w-0 flex-1 items-start gap-2 sm:items-center">
+          {navigationMenuSlot ? (
+            <div className="shrink-0 lg:hidden">{navigationMenuSlot}</div>
           ) : null}
-          <p className="mt-1.5 text-xs text-zinc-600 dark:text-zinc-300">
-            <span className="font-medium text-zinc-500 dark:text-zinc-400">
-              {copy.assignedTo}
-            </span>
-            {": "}
-            <span className="inline-flex items-center gap-1 rounded-full border border-sky-200/90 bg-sky-50 px-2 py-0.5 font-semibold text-sky-900 dark:border-sky-500/30 dark:bg-sky-950/50 dark:text-sky-100">
-              {assignedOwnerLabel ?? copy.assignedToUnassigned}
-            </span>
-          </p>
+          {onBackToConversationList ? (
+            <button
+              type="button"
+              className="grid size-10 shrink-0 place-items-center rounded-xl border border-zinc-200/80 bg-white text-zinc-800 shadow-sm outline-none transition hover:bg-zinc-50 focus-visible:ring-2 focus-visible:ring-emerald-500 lg:hidden dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+              aria-label={copy.backToConversationList}
+              onClick={onBackToConversationList}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="size-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m15 18-6-6 6-6" />
+              </svg>
+            </button>
+          ) : null}
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-base font-semibold text-zinc-950 dark:text-zinc-50">
+              {leadTitle(lead)}
+            </h2>
+            {lead.name ? (
+              <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
+                {lead.phone}
+              </p>
+            ) : null}
+            <p className="mt-1.5 text-xs text-zinc-600 dark:text-zinc-300">
+              <span className="font-medium text-zinc-500 dark:text-zinc-400">
+                {copy.assignedTo}
+              </span>
+              {": "}
+              <span className="inline-flex items-center gap-1 rounded-full border border-sky-200/90 bg-sky-50 px-2 py-0.5 font-semibold text-sky-900 dark:border-sky-500/30 dark:bg-sky-950/50 dark:text-sky-100">
+                {assignedOwnerLabel ?? copy.assignedToUnassigned}
+              </span>
+            </p>
+          </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">
           <span
             className="hidden items-center gap-1.5 rounded-full border border-zinc-200/90 bg-zinc-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-600 sm:inline-flex dark:border-white/10 dark:bg-zinc-900/50 dark:text-zinc-300"
             title={copy.aiActive}

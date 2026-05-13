@@ -80,7 +80,7 @@ export default function SignupPage(): React.JSX.Element {
 
   return (
     <div className="min-h-[100svh] bg-[radial-gradient(1100px_600px_at_20%_-10%,theme(colors.emerald.100),transparent_60%),radial-gradient(900px_500px_at_90%_0%,theme(colors.sky.100),transparent_55%),linear-gradient(to_bottom,theme(colors.white),theme(colors.zinc.50))] text-zinc-950 dark:bg-[radial-gradient(1100px_600px_at_20%_-10%,theme(colors.emerald.950),transparent_60%),radial-gradient(900px_500px_at_90%_0%,theme(colors.sky.950),transparent_55%),linear-gradient(to_bottom,theme(colors.zinc.950),theme(colors.black))] dark:text-zinc-50">
-      <main className="mx-auto flex w-full max-w-[1100px] flex-col items-center justify-center gap-10 px-6 py-16 lg:flex-row lg:justify-between">
+      <main className="mx-auto flex w-full max-w-[1100px] flex-col items-center justify-center gap-8 px-4 py-10 sm:gap-10 sm:px-6 sm:py-16 lg:flex-row lg:justify-between">
         <section className="w-full max-w-xl">
           <div className="inline-flex items-center gap-3">
             <div

@@ -36,6 +36,7 @@ export type InboxPageCopy = {
   leadStatusListLabel: string;
   assignedTo: string;
   assignedToUnassigned: string;
+  backToConversationList: string;
 };
 
 const en: InboxPageCopy = {
@@ -86,6 +87,7 @@ const en: InboxPageCopy = {
   leadStatusListLabel: "Lead status",
   assignedTo: "Assigned to",
   assignedToUnassigned: "Unassigned",
+  backToConversationList: "Conversations",
 };
 
 const ur: InboxPageCopy = {
@@ -136,6 +138,7 @@ const ur: InboxPageCopy = {
   leadStatusListLabel: "لیڈ کی حیثیت",
   assignedTo: "تفویض شدہ",
   assignedToUnassigned: "غیر تفویض شدہ",
+  backToConversationList: "گفتگوؤں پر واپس",
 };
 
 const byLocale: Record<InboxLocale, InboxPageCopy> = { en, ur };

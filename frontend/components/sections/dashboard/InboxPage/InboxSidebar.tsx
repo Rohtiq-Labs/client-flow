@@ -144,7 +144,15 @@ const isActivePath = (
   return pathname === href || pathname.startsWith(`${href}/`);
 };
 
-export const InboxSidebar = (): React.JSX.Element => {
+export type InboxSidebarProps = {
+  mobileDrawerOpen: boolean;
+  onMobileDrawerClose: () => void;
+};
+
+export const InboxSidebar = ({
+  mobileDrawerOpen,
+  onMobileDrawerClose,
+}: InboxSidebarProps): React.JSX.Element => {
   const pathname = usePathname();
   const { user, logout } = useCrmAuth();
   const router = useRouter();
@@ -232,8 +240,15 @@ export const InboxSidebar = (): React.JSX.Element => {
 
   return (
     <aside
-      className="flex h-full w-[240px] shrink-0 flex-col border-r border-zinc-200/80 bg-zinc-50/80 dark:border-white/10 dark:bg-zinc-950/80"
-      aria-label="Workspace navigation"
+      className={[
+        "flex h-full shrink-0 flex-col border-r border-zinc-200/80 bg-zinc-50/80 dark:border-white/10 dark:bg-zinc-950/80",
+        "w-[min(18rem,calc(100vw-1rem))] max-w-[min(18rem,85vw)] lg:w-[240px] lg:max-w-none",
+        "max-lg:fixed max-lg:left-0 max-lg:top-0 max-lg:z-[45] max-lg:shadow-2xl",
+        "max-lg:transition-transform max-lg:duration-200 max-lg:ease-out",
+        mobileDrawerOpen ? "max-lg:translate-x-0" : "max-lg:-translate-x-full",
+        "lg:relative lg:translate-x-0 lg:shadow-none",
+      ].join(" ")}
+      aria-label={navCopy.navigationDrawerLabel}
     >
       <div className="flex items-center justify-between gap-2 px-4 py-5">
         <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -259,6 +274,9 @@ export const InboxSidebar = (): React.JSX.Element => {
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  onClick={() => {
+                    onMobileDrawerClose();
+                  }}
                   className={[
                     "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium outline-none transition",
                     active
@@ -316,11 +334,12 @@ export const InboxSidebar = (): React.JSX.Element => {
           <button
             type="button"
             onClick={() => {
+              onMobileDrawerClose();
               logout();
               router.push("/login");
               router.refresh();
             }}
-            className="hidden h-9 items-center justify-center rounded-xl border border-zinc-200/70 bg-white/70 px-3 text-xs font-semibold text-zinc-700 shadow-sm backdrop-blur transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-white/10 dark:bg-zinc-950/40 dark:text-zinc-200 dark:hover:bg-zinc-950 sm:inline-flex"
+            className="inline-flex h-9 shrink-0 items-center justify-center rounded-xl border border-zinc-200/70 bg-white/70 px-3 text-xs font-semibold text-zinc-700 shadow-sm backdrop-blur transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-white/10 dark:bg-zinc-950/40 dark:text-zinc-200 dark:hover:bg-zinc-950"
           >
             Logout
           </button>

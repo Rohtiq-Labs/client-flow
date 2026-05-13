@@ -2,11 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { io, type Socket } from "socket.io-client";
+import {
+  CrmMobileNavBackdrop,
+  CrmMobileNavMenuButton,
+} from "@/components/sections/dashboard/CrmShell/crm-mobile-nav-controls";
 import { InboxSidebar } from "@/components/sections/dashboard/InboxPage/InboxSidebar";
 import { LeadsHeader } from "@/components/sections/dashboard/LeadsPage/LeadsHeader";
 import { LeadsList } from "@/components/sections/dashboard/LeadsPage/LeadsList";
 import { useCrmAuth } from "@/context/crm-auth-context";
-import type { InboxLocale } from "@/data/dictionaries/inbox-page";
+import type { LeadsLocale } from "@/data/dictionaries/leads-page";
+import type { DashboardNavLocale } from "@/data/dictionaries/dashboard-nav";
+import { getDashboardNavDict } from "@/data/dictionaries/dashboard-nav";
 import { getLeadsPageDict } from "@/data/dictionaries/leads-page";
 import {
   type CrmLeadListRow,
@@ -23,7 +29,7 @@ import { mapApiLeadsToRows } from "@/lib/map-api-leads-to-rows";
 
 const PAGE_SIZE = 5;
 
-const uiLocale: InboxLocale =
+const uiLocale: LeadsLocale & DashboardNavLocale =
   process.env.NEXT_PUBLIC_UI_LOCALE === "ur" ? "ur" : "en";
 
 const getLeadsQuery = (
@@ -69,7 +75,9 @@ const filterLeads = (
 
 export const LeadsPageShell = (): React.JSX.Element => {
   const copy = useMemo(() => getLeadsPageDict(uiLocale), []);
+  const navCopy = useMemo(() => getDashboardNavDict(uiLocale), []);
   const { isAdmin, ready: authReady } = useCrmAuth();
+  const [navOpen, setNavOpen] = useState(false);
 
   const [rows, setRows] = useState<CrmLeadListRow[]>([]);
   const [pageLoading, setPageLoading] = useState(true);
@@ -291,9 +299,21 @@ export const LeadsPageShell = (): React.JSX.Element => {
   return (
     <main
       id="main"
-      className="flex h-[100dvh] w-full overflow-hidden bg-zinc-50/90 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50"
+      className="relative flex h-[100dvh] w-full overflow-hidden bg-zinc-50/90 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50"
     >
-      <InboxSidebar />
+      <CrmMobileNavBackdrop
+        open={navOpen}
+        onClose={() => {
+          setNavOpen(false);
+        }}
+        closeLabel={navCopy.closeNavigationMenuAria}
+      />
+      <InboxSidebar
+        mobileDrawerOpen={navOpen}
+        onMobileDrawerClose={() => {
+          setNavOpen(false);
+        }}
+      />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-zinc-50/50 dark:bg-zinc-950">
         <LeadsHeader
           searchQuery={searchQuery}
@@ -305,6 +325,14 @@ export const LeadsPageShell = (): React.JSX.Element => {
           showScopeFilter={showScopeFilter}
           onAddLead={onAddLead}
           copy={copy}
+          navigationMenuSlot={
+            <CrmMobileNavMenuButton
+              label={navCopy.openNavigationMenuAria}
+              onClick={() => {
+                setNavOpen(true);
+              }}
+            />
+          }
         />
         <LeadsList
           leads={pageSlice}

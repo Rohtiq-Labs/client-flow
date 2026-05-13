@@ -14,6 +14,7 @@ type LeadsHeaderProps = {
   showScopeFilter: boolean;
   onAddLead: () => void;
   copy: LeadsPageCopy;
+  navigationMenuSlot?: React.ReactNode;
 };
 
 export const LeadsHeader = ({
@@ -26,6 +27,7 @@ export const LeadsHeader = ({
   showScopeFilter,
   onAddLead,
   copy,
+  navigationMenuSlot,
 }: LeadsHeaderProps): React.JSX.Element => {
   const filterId = useId();
   const scopeId = useId();
@@ -52,15 +54,20 @@ export const LeadsHeader = ({
   );
 
   return (
-    <header className="shrink-0 border-b border-zinc-200/80 bg-white/90 px-5 py-5 shadow-sm dark:border-white/10 dark:bg-zinc-950/80">
+    <header className="shrink-0 border-b border-zinc-200/80 bg-white/90 px-4 py-4 shadow-sm sm:px-5 sm:py-5 dark:border-white/10 dark:bg-zinc-950/80">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
-            {copy.title}
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            {copy.subtitle}
-          </p>
+        <div className="flex items-start gap-3">
+          {navigationMenuSlot ? (
+            <div className="shrink-0 pt-0.5">{navigationMenuSlot}</div>
+          ) : null}
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg font-semibold tracking-tight text-zinc-950 sm:text-xl dark:text-zinc-50">
+              {copy.title}
+            </h1>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              {copy.subtitle}
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">

@@ -2,10 +2,19 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  CrmMobileNavBackdrop,
+  CrmMobileNavMenuButton,
+} from "@/components/sections/dashboard/CrmShell/crm-mobile-nav-controls";
 import { InboxSidebar } from "@/components/sections/dashboard/InboxPage/InboxSidebar";
+import type { DashboardNavLocale } from "@/data/dictionaries/dashboard-nav";
+import { getDashboardNavDict } from "@/data/dictionaries/dashboard-nav";
 import { useCrmAuth } from "@/context/crm-auth-context";
 import { useOrgBranding } from "@/context/org-branding-context";
 import { patchCrmOrganization } from "@/lib/crm-client";
+
+const uiLocale: DashboardNavLocale =
+  process.env.NEXT_PUBLIC_UI_LOCALE === "ur" ? "ur" : "en";
 
 export default function SetupPage(): React.JSX.Element {
   const router = useRouter();
@@ -18,6 +27,8 @@ export default function SetupPage(): React.JSX.Element {
   const [primaryColor, setPrimaryColor] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [navOpen, setNavOpen] = useState(false);
+  const navCopy = useMemo(() => getDashboardNavDict(uiLocale), []);
 
   const canSave = useMemo(() => {
     return (
@@ -52,20 +63,40 @@ export default function SetupPage(): React.JSX.Element {
   return (
     <main
       id="main"
-      className="flex h-[100dvh] w-full overflow-hidden bg-zinc-50/90 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50"
+      className="relative flex h-[100dvh] w-full overflow-hidden bg-zinc-50/90 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50"
     >
-      <InboxSidebar />
+      <CrmMobileNavBackdrop
+        open={navOpen}
+        onClose={() => {
+          setNavOpen(false);
+        }}
+        closeLabel={navCopy.closeNavigationMenuAria}
+      />
+      <InboxSidebar
+        mobileDrawerOpen={navOpen}
+        onMobileDrawerClose={() => {
+          setNavOpen(false);
+        }}
+      />
       <section className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <header className="shrink-0 border-b border-zinc-200/80 bg-white/90 px-5 py-5 shadow-sm dark:border-white/10 dark:bg-zinc-950/80">
-          <h1 className="text-xl font-semibold tracking-tight">
-            Setup {organization?.name ? `— ${organization.name}` : ""}
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Connect your WhatsApp (Twilio) credentials for this organization.
-          </p>
+        <header className="flex shrink-0 items-start gap-3 border-b border-zinc-200/80 bg-white/90 px-4 py-4 shadow-sm sm:px-5 sm:py-5 dark:border-white/10 dark:bg-zinc-950/80">
+          <CrmMobileNavMenuButton
+            label={navCopy.openNavigationMenuAria}
+            onClick={() => {
+              setNavOpen(true);
+            }}
+          />
+          <div className="min-w-0 flex-1 pt-0.5">
+            <h1 className="text-lg font-semibold tracking-tight sm:text-xl">
+              Setup {organization?.name ? `— ${organization.name}` : ""}
+            </h1>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              Connect your WhatsApp (Twilio) credentials for this organization.
+            </p>
+          </div>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-5 sm:py-6">
           <div className="mx-auto w-full max-w-2xl rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-zinc-950/60">
             {!isAdmin ? (
               <p className="text-sm text-zinc-600 dark:text-zinc-400">

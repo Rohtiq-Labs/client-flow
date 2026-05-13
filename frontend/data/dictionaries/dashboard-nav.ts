@@ -8,6 +8,9 @@ export type DashboardNavCopy = {
   agents: string;
   settings: string;
   system: string;
+  openNavigationMenuAria: string;
+  closeNavigationMenuAria: string;
+  navigationDrawerLabel: string;
 };
 
 const en: DashboardNavCopy = {
@@ -18,6 +21,9 @@ const en: DashboardNavCopy = {
   agents: "Agents",
   settings: "Settings",
   system: "System",
+  openNavigationMenuAria: "Open navigation menu",
+  closeNavigationMenuAria: "Close navigation menu",
+  navigationDrawerLabel: "Workspace navigation",
 };
 
 const ur: DashboardNavCopy = {
@@ -28,6 +34,9 @@ const ur: DashboardNavCopy = {
   agents: "ایجنٹس",
   settings: "سیٹنگز",
   system: "سسٹم",
+  openNavigationMenuAria: "نیویگیشن مینو کھولیں",
+  closeNavigationMenuAria: "نیویگیشن مینو بند کریں",
+  navigationDrawerLabel: "ورک اسپیس نیویگیشن",
 };
 
 const byLocale: Record<DashboardNavLocale, DashboardNavCopy> = { en, ur };

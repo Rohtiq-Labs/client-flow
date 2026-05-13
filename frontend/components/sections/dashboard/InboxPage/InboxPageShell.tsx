@@ -1,8 +1,12 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
+import {
+  CrmMobileNavBackdrop,
+  CrmMobileNavMenuButton,
+} from "@/components/sections/dashboard/CrmShell/crm-mobile-nav-controls";
 import { ChatWindow } from "@/components/sections/dashboard/InboxPage/ChatWindow";
 import { ConversationList } from "@/components/sections/dashboard/InboxPage/ConversationList";
 import { InboxSidebar } from "@/components/sections/dashboard/InboxPage/InboxSidebar";
@@ -10,6 +14,8 @@ import {
   getInboxPageDict,
   type InboxLocale,
 } from "@/data/dictionaries/inbox-page";
+import type { DashboardNavLocale } from "@/data/dictionaries/dashboard-nav";
+import { getDashboardNavDict } from "@/data/dictionaries/dashboard-nav";
 import type {
   InboxLead,
   InboxMessage,
@@ -32,8 +38,31 @@ import { crmSocketAuthPayload } from "@/lib/crm-socket-auth";
 import { crmBackendBase } from "@/lib/crm-api-base";
 import { leadStatusApiToUi, leadStatusUiToApi } from "@/lib/lead-pipeline";
 
-const inboxLocale: InboxLocale =
+const inboxLocale: InboxLocale & DashboardNavLocale =
   process.env.NEXT_PUBLIC_UI_LOCALE === "ur" ? "ur" : "en";
+
+const LG_BREAKPOINT_PX = 1024;
+
+const prefersDesktopInboxLayout = (): boolean => {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  return window.matchMedia(`(min-width: ${LG_BREAKPOINT_PX}px)`).matches;
+};
+
+const resolveInboxLeadSelection = (
+  next: InboxLead[],
+  preferLeadId: string | null,
+): string | null => {
+  const trimmed = preferLeadId?.trim() ?? "";
+  if (trimmed && next.some((l) => l.id === trimmed)) {
+    return trimmed;
+  }
+  if (prefersDesktopInboxLayout()) {
+    return next[0]?.id ?? null;
+  }
+  return null;
+};
 
 const listBadgeFromStatus = (status: LeadPipelineStatus): LeadListBadge =>
   status;
@@ -97,7 +126,10 @@ const ingestMessages = (
 
 export const InboxPageShell = (): React.JSX.Element => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const copy = useMemo(() => getInboxPageDict(inboxLocale), []);
+  const navCopy = useMemo(() => getDashboardNavDict(inboxLocale), []);
+  const [navOpen, setNavOpen] = useState(false);
 
   const [leads, setLeads] = useState<InboxLead[]>([]);
   const [messages, setMessages] = useState<InboxMessage[]>([]);
@@ -115,11 +147,7 @@ export const InboxPageShell = (): React.JSX.Element => {
   const applyLeadsAndSelection = useCallback(
     (next: InboxLead[], preferLeadId: string | null): void => {
       setLeads(next);
-      const pick =
-        preferLeadId && next.some((l) => l.id === preferLeadId)
-          ? preferLeadId
-          : next[0]?.id ?? null;
-      setSelectedLeadId(pick);
+      setSelectedLeadId(resolveInboxLeadSelection(next, preferLeadId));
     },
     [],
   );
@@ -152,6 +180,29 @@ export const InboxPageShell = (): React.JSX.Element => {
       cancelled = true;
     };
   }, [copy.loadError, loadInbox]);
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(min-width: ${LG_BREAKPOINT_PX}px)`);
+    const onViewportChange = (): void => {
+      if (!mq.matches) {
+        return;
+      }
+      const fromUrl = searchParams.get("lead")?.trim() ?? "";
+      if (fromUrl && leads.some((l) => l.id === fromUrl)) {
+        return;
+      }
+      setSelectedLeadId((current) => {
+        if (current !== null) {
+          return current;
+        }
+        return leads[0]?.id ?? null;
+      });
+    };
+    mq.addEventListener("change", onViewportChange);
+    return () => {
+      mq.removeEventListener("change", onViewportChange);
+    };
+  }, [leads, searchParams]);
 
   useEffect(() => {
     const fromUrl = searchParams.get("lead");
@@ -490,6 +541,27 @@ export const InboxPageShell = (): React.JSX.Element => {
     }
   }, [copy.loadError, loadInbox]);
 
+  const closeNav = useCallback((): void => {
+    setNavOpen(false);
+  }, []);
+
+  const backToConversationList = useCallback((): void => {
+    setSelectedLeadId(null);
+    router.replace("/inbox");
+  }, [router]);
+
+  const navigationMenuSlot = useMemo(
+    () => (
+      <CrmMobileNavMenuButton
+        label={navCopy.openNavigationMenuAria}
+        onClick={() => {
+          setNavOpen(true);
+        }}
+      />
+    ),
+    [navCopy.openNavigationMenuAria],
+  );
+
   if (pageLoading && leads.length === 0 && !loadError) {
     return (
       <div
@@ -528,38 +600,62 @@ export const InboxPageShell = (): React.JSX.Element => {
   return (
     <main
       id="main"
-      className="flex h-[100dvh] w-full overflow-hidden bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50"
+      className="relative flex h-[100dvh] w-full overflow-hidden bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50"
     >
-      <InboxSidebar />
-      <ConversationList
-        leads={sortedLeads}
-        selectedLeadId={selectedLeadId}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onSelectLead={selectLead}
-        copy={copy}
-        badgeLabel={(b) => copy.badge[b]}
+      <CrmMobileNavBackdrop
+        open={navOpen}
+        onClose={closeNav}
+        closeLabel={navCopy.closeNavigationMenuAria}
       />
-      <ChatWindow
-        lead={selectedLead}
-        assignedOwnerLabel={assignedOwnerLabel}
-        messages={threadMessages}
-        composerValue={composerValue}
-        onComposerChange={setComposerValue}
-        onSend={sendMessage}
-        onSendVoice={(blob, filename) => {
-          void sendVoiceMessage(blob, filename);
-        }}
-        onSendImage={(blob, filename) => {
-          void sendImageMessage(blob, filename);
-        }}
-        onStatusChange={handleStatusChange}
-        copy={copy}
-        threadLoading={threadLoading}
-        sending={sending}
-        sendError={sendError}
-        statusUpdating={statusUpdating}
-      />
+      <InboxSidebar mobileDrawerOpen={navOpen} onMobileDrawerClose={closeNav} />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row">
+        <div
+          className={[
+            "flex h-full min-h-0 w-full min-w-0 shrink-0 flex-col lg:w-[320px]",
+            selectedLeadId ? "max-lg:hidden" : "",
+          ].join(" ")}
+        >
+          <ConversationList
+            leads={sortedLeads}
+            selectedLeadId={selectedLeadId}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onSelectLead={selectLead}
+            copy={copy}
+            badgeLabel={(b) => copy.badge[b]}
+            navigationMenuSlot={navigationMenuSlot}
+          />
+        </div>
+        <div
+          className={[
+            "flex h-full min-h-0 min-w-0 flex-1 flex-col",
+            !selectedLeadId ? "max-lg:hidden" : "",
+          ].join(" ")}
+        >
+          <ChatWindow
+            lead={selectedLead}
+            assignedOwnerLabel={assignedOwnerLabel}
+            messages={threadMessages}
+            composerValue={composerValue}
+            onComposerChange={setComposerValue}
+            onSend={sendMessage}
+            onSendVoice={(blob, filename) => {
+              void sendVoiceMessage(blob, filename);
+            }}
+            onSendImage={(blob, filename) => {
+              void sendImageMessage(blob, filename);
+            }}
+            onStatusChange={handleStatusChange}
+            copy={copy}
+            threadLoading={threadLoading}
+            sending={sending}
+            sendError={sendError}
+            statusUpdating={statusUpdating}
+            navigationMenuSlot={navigationMenuSlot}
+            onBackToConversationList={backToConversationList}
+          />
+        </div>
+      </div>
     </main>
   );
 };

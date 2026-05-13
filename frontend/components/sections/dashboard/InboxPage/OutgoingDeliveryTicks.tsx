@@ -24,7 +24,7 @@ export const OutgoingDeliveryTicks = ({
 }: OutgoingDeliveryTicksProps): React.JSX.Element => {
   const readColor =
     variant === "outgoing"
-      ? "text-sky-400 dark:text-sky-300"
+      ? "text-blue-500 dark:text-blue-400"
       : "text-sky-600 dark:text-sky-400";
   const baseColor =
     variant === "outgoing"
@@ -44,7 +44,6 @@ export const OutgoingDeliveryTicks = ({
   }
 
   const isRead = status === "read";
-  const isDelivered = status === "delivered" || isRead;
   const tickClass = isRead ? readColor : baseColor;
 
   const aria =
@@ -73,20 +72,18 @@ export const OutgoingDeliveryTicks = ({
       >
         <path d={checkD} />
       </svg>
-      {isDelivered ? (
-        <svg
-          viewBox="0 0 24 24"
-          className={["-ml-2 size-3.5", tickClass].join(" ")}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d={checkD} />
-        </svg>
-      ) : null}
+      <svg
+        viewBox="0 0 24 24"
+        className={["-ml-2 size-3.5", tickClass].join(" ")}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d={checkD} />
+      </svg>
     </span>
   );
 };
